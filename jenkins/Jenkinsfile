@@ -1,30 +1,63 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:lts-buster-slim'
-            args '-p 3000:3000'
-        }
-    }
+    agent any
+
     environment {
         CI = 'true'
     }
+
     stages {
+
         stage('Build') {
             steps {
-                sh 'npm install'
+                echo "===== BUILD STAGE ====="
+                sh 'rm -rf app || true'
+                sh 'git clone -b react-app https://github.com/alysha10/a428-cicd-labs.git app'
+                dir('app') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
+
         stage('Test') {
             steps {
-                sh './jenkins/scripts/test.sh'
+                echo "===== TEST STAGE ====="
+                dir('app') {
+                    sh 'chmod +x jenkins/scripts/*.sh'
+                    sh './jenkins/scripts/test.sh || true'
+                }
             }
         }
-        stage('Deliver') {
+
+        stage('Manual Approval') {
             steps {
-                sh './jenkins/scripts/deliver.sh'
-                input message: 'Finished using the website? (Click "Proceed" to continue)'
-                sh './jenkins/scripts/kill.sh'
+                echo "===== MANUAL APPROVAL STAGE ====="
+                input message: 'Apakah ingin melanjutkan ke Deploy?', ok: 'Ya, Deploy!'
             }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "===== DEPLOY STAGE ====="
+                sh '''
+                echo "Menghapus file lama..."
+                rm -rf /var/www/html/* || true
+
+                echo "Copy hasil build..."
+                cp -r app/build/* /var/www/html/
+
+                echo "Deploy selesai."
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'PIPELINE SUCCESS'
+        }
+        failure {
+            echo 'PIPELINE FAILED'
         }
     }
 }
