@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         CI = 'true'
+        NODE_OPTIONS = '--openssl-legacy-provider'
     }
 
     stages {
@@ -40,12 +41,8 @@ pipeline {
             steps {
                 echo "===== DEPLOY STAGE ====="
                 sh '''
-                echo "Menghapus file lama..."
                 rm -rf /var/www/html/* || true
-
-                echo "Copy hasil build..."
                 cp -r app/build/* /var/www/html/
-
                 echo "Deploy selesai."
                 '''
             }
