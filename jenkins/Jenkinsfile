@@ -41,37 +41,19 @@ pipeline {
             steps {
                 echo "===== DEPLOY STAGE ====="
                 sh '''
+                echo "Menjalankan proses deploy..."
+
                 rm -rf /var/www/html/* || true
                 cp -r app/build/* /var/www/html/
-                echo "Deploy selesai."
+
+                echo "Aplikasi berhasil dideploy."
+                echo "Menunggu 1 menit sebelum pipeline selesai..."
+
+                # Delay 1 menit sesuai kriteria
+                sleep 60
+
+                echo "1 menit selesai. Deploy stage selesai."
                 '''
-            }
-        }
-
-        // ✅ TAMBAHAN STAGE SESUAI KRITERIA KE-3
-        stage('Run App for 1 Minute') {
-            steps {
-                echo "===== RUN APPLICATION FOR 1 MINUTE ====="
-                dir('app') {
-                    sh '''
-                    echo "Menjalankan aplikasi selama 1 menit..."
-                    
-                    # Install serve jika belum ada
-                    npm install -g serve
-
-                    # Jalankan aplikasi di background
-                    serve -s build -l 3000 &
-                    APP_PID=$!
-
-                    # Tunggu 60 detik
-                    sleep 60
-
-                    echo "Menghentikan aplikasi..."
-                    kill $APP_PID
-
-                    echo "Aplikasi dihentikan setelah 1 menit."
-                    '''
-                }
             }
         }
     }
